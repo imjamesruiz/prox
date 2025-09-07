@@ -1,0 +1,19 @@
+{
+  "name": "deals-email-automation",
+  "type": "module",
+  "scripts": {
+    "send:weekly": "node src/cli.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.2",
+    "axios": "^1.11.0",
+    "cheerio": "^1.1.2",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "node-fetch": "^3.3.2",
+    "nodemailer": "^7.0.6",
+    "puppeteer": "^24.19.0",
+    "resend": "^1.1.0"
+  }
+}

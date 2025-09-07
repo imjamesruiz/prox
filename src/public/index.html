@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prox Deals Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* keep all your CSS styles here from your styled dashboard */
+    /* ... (same as before) ... */
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">Prox</div>
+      <div class="subtitle">Weekly Grocery Deals Dashboard</div>
+    </header>
+
+    <!-- Action buttons -->
+    <div style="margin:20px 0; text-align:center;">
+      <button onclick="triggerIngest()">Refresh Deals</button>
+      <button onclick="triggerSendEmails()">Send Emails</button>
+      <button onclick="triggerScrape()">Fetch New Deals</button>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-number" id="total-deals">-</div>
+        <div class="stat-label">Active Deals</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="total-retailers">-</div>
+        <div class="stat-label">Retailers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="avg-savings">-</div>
+        <div class="stat-label">Categories</div>
+      </div>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div>Loading deals...</div>
+    </div>
+
+    <div class="deals-grid" id="deals-container" style="display: none;">
+      <!-- Deals will be populated here -->
+    </div>
+  </div>
+
+  <script>
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function groupDealsByRetailer(deals) {
+      return deals.reduce((acc, deal) => {
+        if (!acc[deal.retailer]) acc[deal.retailer] = [];
+        acc[deal.retailer].push(deal);
+        return acc;
+      }, {});
+    }
+
+    function renderDeals(deals) {
+      const container = document.getElementById('deals-container');
+      const grouped = groupDealsByRetailer(deals);
+
+      // Update stats
+      document.getElementById('total-deals').textContent = deals.length;
+      document.getElementById('total-retailers').textContent = Object.keys(grouped).length;
+      document.getElementById('avg-savings').textContent = [...new Set(deals.map(d => d.category))].length;
+
+      let html = '';
+      Object.entries(grouped).forEach(([retailer, retailerDeals]) => {
+        html += `
+          <div class="retailer-section">
+            <div class="retailer-header">
+              <div class="retailer-name">${retailer}</div>
+              <div class="deal-count">${retailerDeals.length} deal${retailerDeals.length > 1 ? 's' : ''}</div>
+            </div>
+            <div class="deals-list">
+        `;
+
+        retailerDeals.forEach(deal => {
+          html += `
+            <div class="deal-card">
+              <div class="deal-product">${deal.product}</div>
+              <div class="deal-details">
+                <div class="deal-size">${deal.size}</div>
+                <div class="deal-price">$${deal.price}</div>
+              </div>
+              <div class="deal-dates">${formatDate(deal.start_date || deal.start)} → ${formatDate(deal.end_date || deal.end)}</div>
+              <div class="category-tag">${deal.category}</div>
+            </div>
+          `;
+        });
+
+        html += `</div></div>`;
+      });
+
+      container.innerHTML = html;
+      document.getElementById('loading').style.display = 'none';
+      container.style.display = 'block';
+    }
+
+    // Buttons for ingestion and sending emails
+    async function triggerIngest() {
+      const res = await fetch("/ingest", { method: "POST" });
+      alert((await res.json()).message);
+      loadDeals();
+    }
+
+    async function triggerSendEmails() {
+      const res = await fetch("/send-emails", { method: "POST" });
+      alert((await res.json()).message);
+    }
+
+    async function triggerScrape() {
+      const res = await fetch("/scrape", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        alert(`Scraped ${data.deals.length} deals from Target`);
+        renderDeals(data.deals); // optional: show scraped deals right away
+      } else {
+        alert("Scrape failed: " + data.error);
+      }
+    }
+
+
+    // Load deals from API
+    function loadDeals() {
+      fetch("/api/deals")
+        .then(r => r.json())
+        .then(deals => renderDeals(deals))
+        .catch(() => {
+          document.getElementById("loading").innerHTML =
+            '<div style="color: #e74c3c;">Error loading deals</div>';
+        });
+    }
+
+    // Initial load
+    loadDeals();
+  </script>
+</body>
+</html>
+
