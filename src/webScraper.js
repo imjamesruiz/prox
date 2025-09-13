@@ -28,15 +28,22 @@ export async function scrapeTargetDeals() {
   if (!res.ok) throw new Error(`HTTP error ${res.status}`);
   const data = await res.json();
 
-  return data.data.product_summaries.map(p => ({
-    retailer: "Target",
-    product: p.item?.product_description?.title || "Unknown",
-    size: p.item?.product_description?.downstream_description || "N/A",
-    price: p.price?.formatted_current_price || "N/A",
-    category: p.item?.primary_brand?.name || "misc",
-    start_date: new Date().toISOString().split("T")[0],
-    end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
-  }));
+  return data.data.product_summaries.map(p => {
+    const price =
+      p.price?.formatted_current_price ??
+      p.price?.formatted_price ??
+      (p.price?.current_retail ? `$${p.price.current_retail}` : "N/A");
+
+    return {
+      retailer: "Target",
+      product: p.item?.product_description?.title || "Unknown",
+      size: p.item?.product_description?.downstream_description || "N/A",
+      price,
+      category: p.item?.primary_brand?.name || "misc",
+      start_date: new Date().toISOString().split("T")[0],
+      end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
+    };
+  });
 }
 
 // testing

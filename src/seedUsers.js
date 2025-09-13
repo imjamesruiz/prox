@@ -16,6 +16,11 @@ async function seedUsers() {
       name: "Emma Johnson",
       email: "emma.test@example.com",
       preferred_retailers: ["Ralphs", "Vons", "CVS"]
+    },
+    {
+      name: "James Ruiz",
+      email: "imjamesruiz@gmail.com",
+      preferred_retailers: ["Target", "Ralphs"]
     }
   ])
   if (error) console.error("❌ Error seeding users:", error)

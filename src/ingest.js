@@ -49,11 +49,11 @@ export async function ingestDeals() {
   console.log("🎉 Deals ingestion complete")
 }
 
-// if script fully executed run function
-if (import.meta.url === `file://${process.argv[1]}`) {
-  ingestDeals().catch(err => {
-    console.error("❌ Ingestion failed:", err)
-  })
-}
+// // if script fully executed run function
+// if (import.meta.url === `file://${process.argv[1]}`) {
+//   ingestDeals().catch(err => {
+//     console.error("❌ Ingestion failed:", err)
+//   })
+// }
 
 
